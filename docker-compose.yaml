@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  web:
+    image: cham-wings:latest
+    build:
+      target: web
+      context: .
+    env_file:
+      - .env
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+  
+  db:
+    platform: "linux/amd64"
+    image: mysql:5.7
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    restart: unless-stopped  # Optional: Restart phpMyAdmin automatically
+    ports:
+      - "8080:80"  # Map container port 80 to host port 8080 (you can change this)
+    environment:
+      PMA_HOST: db  # Connect to the "db" service (assuming your MySQL service is named "db")
+      PMA_PORT: 3306
+    volumes:
+      - phpmyadmin_data:/var/lib/phpmyadmin  # Optional: Persistent storage for phpMyAdmin data
+    depends_on:
+      - db  # Ensure MySQL service is running before phpMyAdmin
+
+volumes:
+  dbdata:
+  phpmyadmin_data:  # New volume definition
